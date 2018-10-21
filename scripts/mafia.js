@@ -22,6 +22,9 @@ function Mafia(mafiachan) {
     this.mafiaStats = require("mafiastats.js");
     this.mafiaChecker = require("mafiachecker.js");
     sys.makeDir(Config.dataDir + "mafiathemes/");
+    if (!isNaN(sys.getVal("mafia_nextGameNightTime"))) {
+        this.nextGameNightTime = +sys.getVal("mafia_nextGameNightTime");
+    }
     if (sys.getVal("mafia_defaultEventInterval") !== "" && !isNaN(sys.getVal("mafia_nextEventTime"))) {
         this.nextEventTime = +sys.getVal("mafia_nextEventTime");
     } else {
@@ -66,6 +69,7 @@ function Mafia(mafiachan) {
         "trolling": 6
     };
     
+    this.isGameNight = false;
     this.isEvent = false;
     this.rewardSafariTime = 0;
     this.rewardSafariPlayers = [];
@@ -1677,6 +1681,9 @@ function Mafia(mafiachan) {
         }
     };
     this.tryEventTheme = function () { //checked at end of a game and during blank every 2 hours.
+        if (this.hasOwnProperty("nextGameNightTime") && this.nextGameNightTime !== undefined && this.nextGameNightTime <= new Date().getTime()) {
+            this.startGameNight();
+        }
         if (this.eventsEnabled && this.nextEventTime <= new Date().getTime()) {
             this.startEvent();
         } else {
@@ -1687,6 +1694,11 @@ function Mafia(mafiachan) {
             }
         }
     };
+    this.startGameNight = function () {
+        this.isGameNight = true;
+        this.nextGameNightTime = undefined;
+        sys.saveVal("mafia_nextGameNightTime", this.nextGameNightTime);
+    }
     this.enableEvent = function (src, enable) {
         var srcname = sys.name(src);
         if (this.eventsEnabled === enable) {
